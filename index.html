@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firebase Input Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase JS SDK (v8) - replace if you have a different link/version -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Qpid</h1>
+    <form id="dataForm">
+      <label for="input1">What was something positive about your day?</label>
+      <textarea id="input1" rows="3" width="100%" placeholder="Enter your first input here..."></textarea>
+      <label for="input2">What could have been better about your day?</label>
+      <textarea id="input2" rows="3" width="100%" placeholder="Enter your second input here..."></textarea>
+      <label for="input3">What was something that reminded you of me today?</label>
+      <textarea id="input3" rows="3" width="100%" placeholder="Enter your third input here..."></textarea>
+      <button id="submitBtn" type="submit">Submit</button>
+    </form>
+
+    <h2>Recent submissions</h2>
+    <ul id="messages"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
