@@ -16,6 +16,6 @@ app.post('/api/submission', (req, res) => {
   res.status(204).end();
 });
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server listening: http://localhost:${port}`);
 });

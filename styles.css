@@ -2,13 +2,12 @@
 body{margin:0;background:#f7f9fb;color:#111}
 .container{max-width:520px;margin:40px auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(13,38,59,0.08)}
 h1{font-size:3rem;margin:0 0 12px;text-align:center;}
-textarea{padding:10px;border:1px solid #d7e0ea;border-radius:6px;font-size:1rem;margin-bottom:10px;width:100%;resize:vertical;min-height:3rem;}
-button{display:block;padding:10px;background:#0b79ff;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:auto;}
+textarea,.detailField{padding:10px;border:1px solid #d7e0ea;border-radius:6px;font-size:1rem;margin-top:4px;margin-bottom:10px;width:100%;resize:vertical;min-height:3rem;}
+button{display:block;padding:10px;background:#0b79ff;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:4px auto 4px;}
 button:active{transform:translateY(1px)}
-#messages{list-style:none;padding:0;margin:12px 0 0;max-height:260px;overflow:auto}
-#messages li{padding:8px;border-bottom:1px solid #eef5fb;font-size:0.95rem}
-label{display:block;margin-bottom:4px}
-
+#messages{list-style:none;padding:0;margin:12px 0 0;overflow:auto}
+#messages li{padding:8px;border-bottom:1px solid #eef5fb;font-size:0.95rem;cursor:pointer;}
+label{display:block}
 
 @media(min-width:640px){
   form{flex-direction:row}

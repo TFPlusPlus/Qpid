@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Firebase Input Demo</title>
+  <title>Qpid</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Firebase JS SDK (v8) - replace if you have a different link/version -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
@@ -15,17 +14,29 @@
     <form id="dataForm">
       <label for="input1">What was something positive about your day?</label>
       <textarea id="input1" rows="3" width="100%" placeholder="Enter your first input here..."></textarea>
-      <label for="input2">What could have been better about your day?</label>
+      <label for="input2">What was something that could have been better about your day?</label>
       <textarea id="input2" rows="3" width="100%" placeholder="Enter your second input here..."></textarea>
       <label for="input3">What was something that reminded you of me today?</label>
       <textarea id="input3" rows="3" width="100%" placeholder="Enter your third input here..."></textarea>
       <button id="submitBtn" type="submit">Submit</button>
+      <button id="viewArchive" type="button">Archive</button>
     </form>
-
-    <h2>Recent submissions</h2>
-    <ul id="messages"></ul>
+    <div id="archive" hidden>
+      <h2>Past Submissions</h2>
+      <ul id="messages"></ul>
+      <button id="closeArchive">Close</button>
+    </div>
+    <div id="details" hidden>
+      <h2>Details</h2>
+      <p>What was something positive about your day?</p>
+      <p class="detailField" id="detailField1"></p>
+      <p>What was something that could have been better about your day?</p>
+      <p class="detailField" id="detailField2"></p>
+      <p>What was something that reminded you of me today?</p>
+      <p class="detailField" id="detailField3"></p>
+      <button id="closeDetails">Back</button>
+    </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
