@@ -5,12 +5,12 @@ h1{font-size:3rem;margin:0 0 12px;text-align:center;}
 textarea,.detailField{padding:10px;border:1px solid #d7e0ea;border-radius:6px;font-size:1rem;margin-top:4px;margin-bottom:10px;width:100%;resize:vertical;min-height:3rem;}
 button{display:block;padding:10px;background:#0b79ff;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:4px auto 4px;}
 button:active{transform:translateY(1px)}
-#messages{list-style:none;padding:0;margin:12px 0 0;overflow:auto}
-#messages li{padding:8px;border-bottom:1px solid #eef5fb;font-size:0.95rem;cursor:pointer;}
+#archiveList{list-style:none;padding:0;margin:12px 0 0;overflow:auto}
+#archiveList li{padding:8px;border-bottom:1px solid #eef5fb;font-size:0.95rem;cursor:pointer;}
 label{display:block}
 
 @media(min-width:640px){
   form{flex-direction:row}
   input{flex:1}
-  button{width:120px}
+  button{width:150px}
 }
