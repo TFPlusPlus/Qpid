@@ -17,6 +17,13 @@ const thisCollection = `Qpid-${thisName}`;
 const otherCollection = `Qpid-${otherName}`;
 const archiveTitle = document.getElementById('archiveTitle');
 archiveTitle.textContent = `${otherName}'s Archive`;
+document.getElementById('welcome').textContent = `Welcome back ${thisName}! ❤️`;
+
+// Initialize archive state
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let currentArchiveCollection = otherCollection;
+let currentDetailIndex = -1;
 
 // Swap collection button logic
 const swapBtn = document.getElementById('swapCollection');
@@ -24,8 +31,21 @@ swapBtn.textContent = `Go to ${thisName}'s Archive`;
 swapBtn.addEventListener('click', function(){
   swapBtn.textContent = swapBtn.textContent == `Go to ${otherName}'s Archive` ? `Go to ${thisName}'s Archive` : `Go to ${otherName}'s Archive`;
   archiveTitle.textContent = archiveTitle.textContent == `${thisName}'s Archive` ? `${otherName}'s Archive` : `${thisName}'s Archive`;
-  renderArchiveList(archiveTitle.textContent.includes(thisName) ? thisCollection : otherCollection);
+  // reset to first page when switching
+  currentPage = 1;
+  currentArchiveCollection = archiveTitle.textContent.includes(thisName) ? thisCollection : otherCollection;
+  renderArchiveList(currentArchiveCollection, currentPage);
 });
+
+// Mood slider live value update
+const moodSliderEl = document.getElementById('moodSlider');
+const moodValueEl = document.getElementById('moodValue');
+if(moodSliderEl && moodValueEl){
+  moodValueEl.textContent = moodSliderEl.value;
+  moodSliderEl.addEventListener('input', () => {
+    moodValueEl.textContent = moodSliderEl.value;
+  });
+}
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -48,36 +68,73 @@ document.getElementById('dataForm').addEventListener('submit', function(e){
   const v2 = document.getElementById('input2').value.trim();
   const v3 = document.getElementById('input3').value.trim();
   if(!(v1 && v2 && v3)) {
-    alert('Please answer all questions before submitting.');
+    alert('Oopsie! Did you miss a question? ');
+    return;
+  }
+  const moodEl = document.getElementById('moodSlider');
+  const mood = moodEl ? parseInt(moodEl.value, 10) : null;
+  if(!(mood >= 1 && mood <= 10)){
+    alert('Please select a mood between 1 and 10.');
     return;
   }
   const docId = new Date().toISOString();
-  db.collection(collectionName).doc(docId).set({field1:v1,field2:v2,field3:v3,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
-    .then(() => saveLocalId(docId))
+  // Save mood as a numeric field `mood` alongside the text fields and timestamp
+  db.collection(thisCollection).doc(docId).set({field1:v1,field2:v2,field3:v3,mood:mood,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(() => fetchCollection(thisCollection))
     .catch(err => console.error('Firestore write failed', err));
   document.getElementById('dataForm').reset();
-  alert('Submitted!');
+  document.getElementById('dataForm').hidden = true;
+  document.getElementById('submitted').hidden = false;
 });
 
 // Event listeners
-function openDetails(data, id){
+function openDetails(collectionName, id){
+  const localData = JSON.parse(localStorage.getItem(`local_${collectionName}`)) || [];
+  const idx = localData.findIndex(item => item.id === id);
+  if(idx === -1) return;
+  const data = localData[idx].data || {};
+  currentArchiveCollection = collectionName;
+  currentDetailIndex = idx;
   document.getElementById('detailField1').textContent = `${data.field1 || ''}`;
   document.getElementById('detailField2').textContent = `${data.field2 || ''}`;
   document.getElementById('detailField3').textContent = `${data.field3 || ''}`;
-  document.getElementById('detailsTitle').textContent = `${archiveTitle.textContent} - ${id}`;
+  document.getElementById('detailsTitle').textContent = `${archiveTitle.textContent} - ${id.split('T')[0]}`;
   document.getElementById('details').hidden = false;
   document.getElementById('archive').hidden = true;
+
+  // show mood in details
+  const moodDisplay = document.getElementById('detailMood');
+  if(moodDisplay) moodDisplay.textContent = (data.mood !== undefined && data.mood !== null) ? String(data.mood) : '';
+
+  // Update Prev/Next buttons
+  const prevBtn = document.getElementById('detailsPrev');
+  const nextBtn = document.getElementById('detailsNext');
+  document.getElementById('detailsPageInfo').textContent = `${idx + 1} / ${localData.length}`;
+  if(prevBtn) {
+    prevBtn.disabled = idx <= 0;
+    prevBtn.onclick = () => {
+      const ndx = Math.max(0, idx - 1);
+      openDetails(collectionName, localData[ndx].id);
+    };
+  }
+  if(nextBtn) {
+    nextBtn.disabled = idx >= localData.length - 1;
+    nextBtn.onclick = () => {
+      const ndx = Math.min(localData.length - 1, idx + 1);
+      openDetails(collectionName, localData[ndx].id);
+    };
+  }
 }
 
 document.getElementById('viewArchive').addEventListener('click', function(){
   document.getElementById('archive').hidden = false;
-  document.getElementById('dataForm').hidden = true;
+  document.getElementById('mainPage').hidden = true;
 });
 
-document.getElementById('closeArchive').addEventListener('click', function(){
-  document.getElementById('archive').hidden = true;
-  document.getElementById('dataForm').hidden = false;
-});
+// document.getElementById('closeArchive').addEventListener('click', function(){
+//   document.getElementById('archive').hidden = true;
+//   document.getElementById('mainPage').hidden = false;
+// });
 
 document.getElementById('closeDetails').addEventListener('click', function(){
   document.getElementById('details').hidden = true;
@@ -98,18 +155,64 @@ fetchCollection(thisCollection);
 fetchCollection(otherCollection);
 
 // Render archive list from localStorage (which is updated on the initial fetch)
-function renderArchiveList(collectionName) {
+function renderArchiveList(collectionName, page = 1){
   const list = document.getElementById('archiveList');
   if(!list) return;
   list.innerHTML = '';
   const localData = JSON.parse(localStorage.getItem(`local_${collectionName}`)) || [];
-  localData.sort((a, b) => new Date(b.data.createdAt) - new Date(a.data.createdAt));
-  localData.forEach(({id, data}) => {
+  // Sort newest first. Handle Firestore timestamps generically.
+  localData.sort((a, b) => {
+    const ta = a.data && a.data.createdAt;
+    const tb = b.data && b.data.createdAt;
+    const da = ta && ta.toDate ? ta.toDate() : new Date(ta);
+    const db = tb && tb.toDate ? tb.toDate() : new Date(tb);
+    return db - da;
+  });
+
+  const total = localData.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const clampedPage = Math.min(Math.max(1, page), totalPages);
+  const start = (clampedPage - 1) * PAGE_SIZE;
+  const slice = localData.slice(start, start + PAGE_SIZE);
+
+  slice.forEach(({id, data}) => {
     const li = document.createElement('li');
-    li.textContent = id;
+    li.textContent = id.split('T')[0];
     li.dataset.id = id;
-    li.addEventListener('click', () => openDetails(data, id));
+    li.addEventListener('click', () => openDetails(collectionName, id));
     list.appendChild(li);
   });
+
+  // Update controls state
+  const prevBtn = document.getElementById('archivePrev');
+  const nextBtn = document.getElementById('archiveNext');
+  const pageInfo = document.getElementById('archivePageInfo');
+  if(pageInfo) pageInfo.textContent = `${clampedPage} / ${totalPages}`;
+  if(prevBtn) prevBtn.disabled = clampedPage <= 1;
+  if(nextBtn) nextBtn.disabled = clampedPage >= totalPages;
+
+  // attach handlers (re-attach safe)
+  if(prevBtn) prevBtn.onclick = () => {
+    currentPage = Math.max(1, clampedPage - 1);
+    renderArchiveList(collectionName, currentPage);
+  };
+  if(nextBtn) nextBtn.onclick = () => {
+    currentPage = Math.min(totalPages, clampedPage + 1);
+    renderArchiveList(collectionName, currentPage);
+  };
 }
-renderArchiveList(otherCollection);
+
+renderArchiveList(otherCollection, 1);
+
+// Check if today's entry has already been submitted (based on localStorage)
+function checkTodaySubmitted(collectionName){
+  const localData = JSON.parse(localStorage.getItem(`local_${collectionName}`)) || [];
+  const today = new Date().toISOString().split('T')[0];
+  return localData.some((data) => data.id.startsWith(today));
+}
+
+if (checkTodaySubmitted(thisCollection)){
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('dataForm').hidden = true;
+  document.getElementById('submitted').hidden = false;
+}
